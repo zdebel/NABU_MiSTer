@@ -1,1 +1,1 @@
-# NABU_MiSTer
+WIP NABU MiSTer core in verilog.
