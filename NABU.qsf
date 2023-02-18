@@ -73,4 +73,54 @@ set_global_assignment -name SEED 1
 source sys/sys.tcl
 source sys/sys_analog.tcl
 source files.qip
+set_global_assignment -name VERILOG_FILE rtl/bios/bios.v
+set_global_assignment -name VERILOG_FILE rtl/ram/ram.v
+set_global_assignment -name QIP_FILE files.qip
+set_global_assignment -name VERILOG_FILE build_id.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_noise.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_exp.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_eg.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_div.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_cen.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49_bus.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/jt49.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/filter/jt49_mave.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/filter/jt49_dly.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/filter/jt49_dcrm2.v
+set_global_assignment -name VERILOG_FILE rtl/jt49/filter/jt49_dcrm.v
+set_global_assignment -name VHDL_FILE rtl/T80/T8080se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80sed.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80se.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80s.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80pa.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80as.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80a.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE rtl/T80/T80.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_wait_control.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_vga.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_text12.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_ssg.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_sprite.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_spinforam.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_register.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_package.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_ntsc_pal.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_linebuf.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_interrupt.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_hvcounter.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_graphic4567.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_graphic123m.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_doublebuf.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_command.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp_colordec.vhd
+set_global_assignment -name VHDL_FILE rtl/TMS9918/vdp.vhd
+set_global_assignment -name CDF_FILE jtag.cdf
+set_global_assignment -name QIP_FILE sys/sys.qip
+set_global_assignment -name SDC_FILE NABU.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE NABU.sv
+set_global_assignment -name QIP_FILE rtl/bios.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

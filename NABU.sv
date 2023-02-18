@@ -276,6 +276,103 @@ wire [7:0] video;
 /*
 	TODO: ...everything!
 */
+reg [4:0] ce_cnt = 0;
+//cpu clock enable
+reg z80_ce = 0;
+//psg clock enable
+reg ay8910_ce = 0;
+//vdp clock enable
+reg tms9918_ce = 0;
+
+/* CLOCK AND CLOCK ENABLE GENERATION */
+//clk_sys is set to 42.95454 MHz
+//modulo twice the divider, because we're generating edges here
+always @(posedge clk_sys) begin
+	ce_cnt <= ce_cnt + 1;
+	if (ce_cnt == 23) begin
+		 ce_cnt <= 0;
+	end
+	//42.95454 / 24 = 1.7897725 MHz
+	if ((ce_cnt % 12) == 0) begin
+		 ay8910_ce = !ay8910_ce;
+	end
+	//42.95454 / 12 = 3.579545 MHz
+	// /6 because we're using only cen_p in T80pa so we need 7.15909 MHz
+	if ((ce_cnt % 3) == 0) begin
+		 z80_ce = !z80_ce;
+	end
+	//42.95454 / 4 = 10.738635 MHz
+	if ((ce_cnt % 2) == 0) begin
+		 tms9918_ce = !tms9918_ce;
+	end
+end
+
+/* Z80 */
+wire [15:0] addr;
+wire  [7:0] cpu_dout;
+wire        nM1;
+wire        nMREQ;
+wire        nIORQ;
+wire        nRD;
+wire        nWR;
+wire        nRFSH;
+wire        nBUSACK;
+wire        nINT;
+wire	[7:0] cpu_din = 
+	!nMREQ ? ((!ctrl_reg[0] & (addr < rom_size)) ? rom_dout : ram_dout) :
+	!nRD & !nM1 & !nIORQ ? 8'hff :
+	8'hff
+;
+
+T80pa cpu
+(
+	.RESET_n(~reset),
+	.CLK(clk_sys),
+	.CEN_p(z80_ce),
+	.CEN_n(1),
+	
+	.WAIT_n(1),
+	
+	.INT_n(nINT),
+	.NMI_n(1),
+	.BUSRQ_n(1),
+	
+	.M1_n(nM1),
+	.MREQ_n(nMREQ),
+	.IORQ_n(nIORQ),
+	
+	.RD_n(nRD),
+	.WR_n(nWR),
+	
+	.RFSH_n(nRFSH),
+	.HALT_n(1),
+	
+	.BUSAK_n(nBUSACK),
+	.A(addr),
+	.DO(cpu_dout),
+	.DI(cpu_din),
+);
+
+wire [7:0] ram_dout;
+ram ram_inst(
+	.address(addr),
+	.data(cpu_dout),
+	.inclock(clk_sys),
+	.outclock(),
+	.wren(),
+	.q(ram_dout)
+);
+
+/* NABU control reg - U6 */
+reg [7:0] ctrl_reg;
+
+wire [7:0] rom_dout;
+reg [15:0] rom_size = 4096;
+bios bios_inst (
+	.address(addr),
+	.clock(clk_sys),
+	.q(rom_dout)
+);
 
 assign CLK_VIDEO = clk_sys;
 assign CE_PIXEL = ce_pix;
