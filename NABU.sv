@@ -301,11 +301,14 @@ always @(posedge clk_sys) begin
 	if ((ce_cnt % 3) == 0) begin
 		 z80_ce = !z80_ce;
 	end
-	//42.95454 / 4 = 10.738635 MHz
-	if ((ce_cnt % 2) == 0) begin
-		 tms9918_ce = !tms9918_ce;
-	end
+	//42.95454 / 2 = 21.47727 MHz
+	tms9918_ce = !tms9918_ce;
 end
+
+
+wire        io_wr = ~nIORQ & ~nWR & nM1;
+wire        io_rd = ~nIORQ & ~nRD & nM1;
+wire        m1    = ~nM1 & ~nMREQ;
 
 /* Z80 */
 wire [15:0] addr;
@@ -320,9 +323,16 @@ wire        nBUSACK;
 wire        nINT;
 wire	[7:0] cpu_din = 
 	!nMREQ ? ((!ctrl_reg[0] & (addr < rom_size)) ? rom_dout : ram_dout) :
-	!nRD & !nM1 & !nIORQ ? 8'hff :
+	!io_rd ? 8'hff :
+	(addr == 8'hA0) ? vdp_out :
 	8'hff
 ;
+
+always @(posedge clk_sys) begin
+	if (!nIORQ & nM1 & !nWR & (addr == 0)) begin
+		ctrl_reg <= cpu_dout;
+	end
+end
 
 T80pa cpu
 (
@@ -350,16 +360,60 @@ T80pa cpu
 	.BUSAK_n(nBUSACK),
 	.A(addr),
 	.DO(cpu_dout),
-	.DI(cpu_din),
+	.DI(cpu_din)
 );
 
+wire [7:0] vdp_out;
+wire vdp_cs;
+wire vdp_int;
+VDP vdp_inst(
+	.CLK21M(tms9918_ce),
+   .RESET(reset),
+   .REQ(vdp_cs),
+	.ACK(),
+	.WRT(!nWR),
+	.ADR(addr),
+	.DBI(vdp_out),
+	.DBO(cpu_dout),
+
+	.INT_N(vdp_int),
+
+	.PRAMOE_N(),
+	.PRAMWE_N(vram_we_n),
+	.PRAMADR(vram_addr),
+	.PRAMDBI({vram_dout, vram_dout}),
+	.PRAMDBO(vram_din),
+	
+	.VDPSPEEDMODE(0),
+	.RATIOMODE(3'b000),
+	.CENTERYJK_R25_N(),
+
+	.PVIDEOR(),             //: OUT   STD_LOGIC_VECTOR(  5 DOWNTO 0 );
+	.PVIDEOG(),             //: OUT   STD_LOGIC_VECTOR(  5 DOWNTO 0 );
+	.PVIDEOB(),             //: OUT   STD_LOGIC_VECTOR(  5 DOWNTO 0 );
+	.PVIDEODE(VGA_DE),
+
+	.PVIDEOHS_N(VGA_HS),
+	.PVIDEOVS_N(VGA_VS),
+	.PVIDEOCS_N(),
+
+	.PVIDEODHCLK(),
+	.PVIDEODLCLK(),
+
+	.DISPRESO(0),
+	.NTSC_PAL_TYPE(0),
+	.FORCED_V_MODE(0),
+	.LEGACY_VGA(0),
+
+	.DEBUG_OUTPUT()
+  );
+
 wire [7:0] ram_dout;
-ram ram_inst(
+cpu_ram ram_inst(
 	.address(addr),
 	.data(cpu_dout),
-	.inclock(clk_sys),
-	.outclock(),
-	.wren(),
+	.clock(clk_sys),
+	.wren(!nWR),
 	.q(ram_dout)
 );
 
@@ -374,15 +428,27 @@ bios bios_inst (
 	.q(rom_dout)
 );
 
-assign CLK_VIDEO = clk_sys;
-assign CE_PIXEL = ce_pix;
+wire [13:0] vram_addr;
+wire vram_we_n;
+wire [7:0] vram_din;
+wire [7:0] vram_dout;
+vram vram_inst (
+	.address(vram_addr),
+	.clock(clk_sys),
+	.data(vram_din),
+	.wren(!vram_we_n),
+	.q(vram_dout)
+);
 
-assign VGA_DE = ~(HBlank | VBlank);
-assign VGA_HS = HSync;
-assign VGA_VS = VSync;
-assign VGA_G  = (!col || col == 2) ? video : 8'd0;
-assign VGA_R  = (!col || col == 1) ? video : 8'd0;
-assign VGA_B  = (!col || col == 3) ? video : 8'd0;
+assign CLK_VIDEO = clk_sys;
+assign CE_PIXEL = z80_ce;
+
+//assign VGA_DE = ~(HBlank | VBlank);
+//assign VGA_HS = HSync;
+//assign VGA_VS = VSync;
+assign VGA_G  = ctrl_reg[3] ? 8'hff : 8'h00;
+assign VGA_R  = ctrl_reg[4] ? 8'hff : 8'h00;
+assign VGA_B  = ctrl_reg[5] ? 8'hff : 8'h00;
 
 reg  [26:0] act_cnt;
 always @(posedge clk_sys) act_cnt <= act_cnt + 1'd1; 

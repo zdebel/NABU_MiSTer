@@ -1,8 +1,7 @@
-ram	ram_inst (
+vram	vram_inst (
 	.address ( address_sig ),
+	.clock ( clock_sig ),
 	.data ( data_sig ),
-	.inclock ( inclock_sig ),
-	.outclock ( outclock_sig ),
 	.wren ( wren_sig ),
 	.q ( q_sig )
 	);
